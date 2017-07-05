@@ -196,8 +196,7 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
     if(!_session) {
         _session = [[AVCaptureSession alloc] init];
         _session.sessionPreset = self.cameraQuality;
-        _session.maximumVideoDuration = self.maximumVideoDuration;
-
+        
         // preview layer
         CGRect bounds = self.preview.layer.bounds;
         _captureVideoPreviewLayer = [[AVCaptureVideoPreviewLayer alloc] initWithSession:self.session];
@@ -281,7 +280,7 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
     if (![self.captureVideoPreviewLayer.connection isEnabled]) {
         [self.captureVideoPreviewLayer.connection setEnabled:YES];
     }
-
+    
     [self.session startRunning];
 }
 
@@ -395,6 +394,10 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
         }
     }
 
+    CMTime maxDuration = CMTimeMake(self.maximumVideoDuration.unsignedIntegerValue, 30);
+    NSLog(@"maxDuration: %@", self.maximumVideoDuration);
+    [self.movieFileOutput setMaxRecordedDuration:maxDuration];
+    
     self.didRecordCompletionBlock = completionBlock;
 
     [self.movieFileOutput startRecordingToOutputFileURL:url recordingDelegate:self];
