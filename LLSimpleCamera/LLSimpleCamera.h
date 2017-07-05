@@ -100,6 +100,11 @@ typedef enum : NSUInteger {
 @property (nonatomic, assign) CGFloat maxScale;
 
 /**
+ * Maximum video duration
+ */
+@property (nonatomic, assign) NSTimeInterval *maximumVideoDuration;
+
+/**
  * Fixess the orientation after the image is captured is set to Yes.
  * see: http://stackoverflow.com/questions/5427656/ios-uiimagepickercontroller-result-image-orientation-after-upload
  */
