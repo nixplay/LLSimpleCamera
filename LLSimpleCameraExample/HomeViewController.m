@@ -14,6 +14,7 @@
 @interface HomeViewController ()
 @property (strong, nonatomic) LLSimpleCamera *camera;
 @property (strong, nonatomic) UILabel *errorLabel;
+@property (strong, nonatomic) UILabel *timeLabel;
 @property (strong, nonatomic) UIButton *snapButton;
 @property (strong, nonatomic) UIButton *switchButton;
 @property (strong, nonatomic) UIButton *flashButton;
@@ -37,7 +38,7 @@
     self.camera = [[LLSimpleCamera alloc] initWithQuality:AVCaptureSessionPresetHigh
                                                  position:LLCameraPositionRear
                                              videoEnabled:YES];
-    
+    self.camera.maximumVideoDuration = @(500);
     // attach to a view controller
     [self.camera attachToViewController:self withFrame:CGRectMake(0, 0, screenRect.size.width, screenRect.size.height)];
     
@@ -93,6 +94,29 @@
             }
         }
     }];
+    
+    [self.camera setOnRecordingTime:^(double recordedTime, double maxTime) {
+        if(weakSelf.timeLabel == nil ){
+            UILabel *label = [[UILabel alloc] initWithFrame:CGRectZero];
+            label.text = [NSString stringWithFormat:@"Recorded time %f",recordedTime];
+            label.numberOfLines = 2;
+            label.lineBreakMode = NSLineBreakByWordWrapping;
+            label.backgroundColor = [UIColor clearColor];
+            label.font = [UIFont fontWithName:@"AvenirNext-DemiBold" size:13.0f];
+            label.textColor = [UIColor whiteColor];
+            label.textAlignment = NSTextAlignmentCenter;
+            [label sizeToFit];
+            label.center = CGPointMake(screenRect.size.width / 2.0f, screenRect.size.height / 2.0f);
+            weakSelf.timeLabel = label;
+            [weakSelf.view addSubview:weakSelf.timeLabel];
+        }else{
+            weakSelf.timeLabel.text = [NSString stringWithFormat:@"Recorded time %f",recordedTime];
+        }
+        
+        
+        
+    }];
+    
 
     // ----- camera buttons -------- //
     
@@ -209,6 +233,14 @@
             NSURL *outputURL = [[[self applicationDocumentsDirectory]
                                  URLByAppendingPathComponent:@"test1"] URLByAppendingPathExtension:@"mov"];
             [self.camera startRecordingWithOutputUrl:outputURL didRecord:^(LLSimpleCamera *camera, NSURL *outputFileUrl, NSError *error) {
+                
+                self.segmentedControl.hidden = NO;
+                self.flashButton.hidden = NO;
+                self.switchButton.hidden = NO;
+                
+                self.snapButton.layer.borderColor = [UIColor whiteColor].CGColor;
+                self.snapButton.backgroundColor = [[UIColor whiteColor] colorWithAlphaComponent:0.5];
+                
                 VideoViewController *vc = [[VideoViewController alloc] initWithVideoUrl:outputFileUrl];
                 [self.navigationController pushViewController:vc animated:YES];
             }];

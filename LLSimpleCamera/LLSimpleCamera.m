@@ -27,6 +27,7 @@
 @property (strong, nonatomic) UIPinchGestureRecognizer *pinchGesture;
 @property (nonatomic, assign) CGFloat beginGestureScale;
 @property (nonatomic, assign) CGFloat effectiveScale;
+@property (strong, nonatomic) dispatch_queue_t sessionQueue;
 @property (nonatomic, copy) void (^didRecordCompletionBlock)(LLSimpleCamera *camera, NSURL *outputFileUrl, NSError *error);
 @end
 
@@ -59,6 +60,7 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
 - (instancetype)initWithCoder:(NSCoder *)aDecoder
 {
     if (self = [super initWithCoder:aDecoder]) {
+        
         [self setupWithQuality:AVCaptureSessionPresetHigh
                       position:LLCameraPositionRear
                   videoEnabled:YES];
@@ -70,6 +72,7 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
                 position:(LLCameraPosition)position
             videoEnabled:(BOOL)videoEnabled
 {
+    _sessionQueue = dispatch_queue_create( "session queue", DISPATCH_QUEUE_SERIAL );
     _cameraQuality = quality;
     _position = position;
     _fixOrientationAfterCapture = NO;
@@ -401,8 +404,28 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
     self.didRecordCompletionBlock = completionBlock;
 
     [self.movieFileOutput startRecordingToOutputFileURL:url recordingDelegate:self];
+    
+    [self addObserver:self
+           forKeyPath:@"movieFileOutput.recording"
+              options:(NSKeyValueObservingOptionOld | NSKeyValueObservingOptionNew)
+              context:nil];
 }
-
+- (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context{
+    dispatch_async( self.sessionQueue, ^{ // Background task started
+        // While the movie is recording, update the progress bar
+        while (self.movieFileOutput.isRecording) {
+            double duration = CMTimeGetSeconds(self.movieFileOutput.recordedDuration);
+            double time = CMTimeGetSeconds(self.movieFileOutput.maxRecordedDuration);
+            
+//            CGFloat progress = (CGFloat) (duration / time);
+//            NSLog(@"progress %f",progress);
+            dispatch_async(dispatch_get_main_queue(), ^{ // Here I dispatch to main queue and update the progress view.
+//                [self.progressView setProgress:progress animated:YES];
+                if(self.onRecordingTime) self.onRecordingTime(duration,time);
+            });
+        }
+    });
+}
 - (void)stopRecording
 {
     if(!self.videoEnabled) {
@@ -423,6 +446,9 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
     self.recording = NO;
     [self enableTorch:NO];
 
+    [self removeObserver:self
+           forKeyPath:@"movieFileOutput.recording"];
+    
     if(self.didRecordCompletionBlock) {
         self.didRecordCompletionBlock(self, outputFileURL, error);
     }

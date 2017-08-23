@@ -54,6 +54,11 @@ typedef enum : NSUInteger {
 @property (nonatomic, copy) void (^onStartRecording)(LLSimpleCamera* camera);
 
 /**
+ * Triggered when camera starts recording
+ */
+@property (nonatomic, copy) void (^onRecordingTime)(double recordedTime, double maxTime);
+
+/**
  * Camera quality, set a constants prefixed with AVCaptureSessionPreset.
  * Make sure to call before calling -(void)initialize method, otherwise it would be late.
  */
