@@ -416,13 +416,7 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
         while (self.movieFileOutput.isRecording) {
             double duration = CMTimeGetSeconds(self.movieFileOutput.recordedDuration);
             double time = CMTimeGetSeconds(self.movieFileOutput.maxRecordedDuration);
-            
-//            CGFloat progress = (CGFloat) (duration / time);
-//            NSLog(@"progress %f",progress);
-            dispatch_async(dispatch_get_main_queue(), ^{ // Here I dispatch to main queue and update the progress view.
-//                [self.progressView setProgress:progress animated:YES];
-                if(self.onRecordingTime) self.onRecordingTime(duration,time);
-            });
+            if(self.onRecordingTime) self.onRecordingTime(duration,time);
         }
     });
 }
