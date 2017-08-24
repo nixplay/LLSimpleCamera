@@ -107,7 +107,7 @@ typedef enum : NSUInteger {
 /**
  * Maximum video duration
  */
-@property (nonatomic, assign) NSNumber *maximumVideoDuration;
+@property (nonatomic) unsigned int maximumVideoDuration;
 
 /**
  * Fixess the orientation after the image is captured is set to Yes.
